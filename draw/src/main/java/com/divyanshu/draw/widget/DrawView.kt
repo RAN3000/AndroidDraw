@@ -7,7 +7,7 @@ import androidx.core.graphics.ColorUtils
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import java.util.LinkedHashMap
+import java.util.*
 
 class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var mPaths = LinkedHashMap<MyPath, PaintOptions>()
@@ -41,21 +41,23 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     fun undo() {
-        if (mPaths.isEmpty() && mLastPaths.isNotEmpty()) {
-            mPaths = mLastPaths.clone() as LinkedHashMap<MyPath, PaintOptions>
-            mLastPaths.clear()
-            invalidate()
-            return
-        }
-        if (mPaths.isEmpty()) {
-            return
-        }
-        val lastPath = mPaths.values.lastOrNull()
-        val lastKey = mPaths.keys.lastOrNull()
+        synchronized(mPaths) {
+            if (mPaths.isEmpty() && mLastPaths.isNotEmpty()) {
+                mPaths = mLastPaths.clone() as LinkedHashMap<MyPath, PaintOptions>
+                mLastPaths.clear()
+                invalidate()
+                return
+            }
+            if (mPaths.isEmpty()) {
+                return
+            }
+            val lastPath = mPaths.values.lastOrNull()
+            val lastKey = mPaths.keys.lastOrNull()
 
-        mPaths.remove(lastKey)
-        if (lastPath != null && lastKey != null) {
-            mUndonePaths[lastKey] = lastPath
+            mPaths.remove(lastKey)
+            if (lastPath != null && lastKey != null) {
+                mUndonePaths[lastKey] = lastPath
+            }
         }
         invalidate()
     }
@@ -104,15 +106,19 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     fun addPath(path: MyPath, options: PaintOptions) {
-        mPaths[path] = options
+        synchronized(mPaths) {
+            mPaths[path] = options
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        for ((key, value) in mPaths) {
-            changePaint(value)
-            canvas.drawPath(key, mPaint)
+        synchronized(mPaths) {
+            for ((key, value) in mPaths) {
+                changePaint(value)
+                canvas.drawPath(key, mPaint)
+            }
         }
 
         changePaint(mPaintOptions)
@@ -127,7 +133,9 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     fun clearCanvas() {
         mLastPaths = mPaths.clone() as LinkedHashMap<MyPath, PaintOptions>
         mPath.reset()
-        mPaths.clear()
+        synchronized(mPaths) {
+            mPaths.clear()
+        }
         invalidate()
     }
 
@@ -154,7 +162,9 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             mPath.lineTo(mCurX + 1, mCurY)
         }
 
-        mPaths[mPath] = mPaintOptions
+        synchronized(mPaths) {
+            mPaths[mPath] = mPaintOptions
+        }
         mPath = MyPath()
         mPaintOptions = PaintOptions(mPaintOptions.color, mPaintOptions.strokeWidth, mPaintOptions.alpha, mPaintOptions.isEraserOn)
     }
