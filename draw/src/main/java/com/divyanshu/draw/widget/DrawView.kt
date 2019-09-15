@@ -44,7 +44,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         if (mPaths.isEmpty() && mLastPaths.isNotEmpty()) {
             mPaths = mLastPaths.clone() as LinkedHashMap<MyPath, PaintOptions>
             mLastPaths.clear()
-            postInvalidate()
+            invalidate()
             return
         }
         if (mPaths.isEmpty()) {
@@ -57,7 +57,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         if (lastPath != null && lastKey != null) {
             mUndonePaths[lastKey] = lastPath
         }
-        postInvalidate()
+        invalidate()
     }
 
     fun redo() {
@@ -68,7 +68,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         val lastKey = mUndonePaths.keys.last()
         addPath(lastKey, mUndonePaths.values.last())
         mUndonePaths.remove(lastKey)
-        postInvalidate()
+        invalidate()
     }
 
     fun setColor(newColor: Int) {
@@ -76,7 +76,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         val alphaColor = ColorUtils.setAlphaComponent(newColor, mPaintOptions.alpha)
         mPaintOptions.color = alphaColor
         if (mIsStrokeWidthBarEnabled) {
-            postInvalidate()
+            invalidate()
         }
     }
 
@@ -89,7 +89,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     fun setStrokeWidth(newStrokeWidth: Float) {
         mPaintOptions.strokeWidth = newStrokeWidth
         if (mIsStrokeWidthBarEnabled) {
-            postInvalidate()
+            invalidate()
         }
     }
 
@@ -128,7 +128,7 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         mLastPaths = mPaths.clone() as LinkedHashMap<MyPath, PaintOptions>
         mPath.reset()
         mPaths.clear()
-        postInvalidate()
+        invalidate()
     }
 
     private fun actionDown(x: Float, y: Float) {
@@ -174,14 +174,14 @@ class DrawView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             MotionEvent.ACTION_UP -> actionUp()
         }
 
-        postInvalidate()
+        invalidate()
         return true
     }
 
     fun toggleEraser() {
         isEraserOn = !isEraserOn
         mPaintOptions.isEraserOn = isEraserOn
-        postInvalidate()
+        invalidate()
     }
 
 }
